@@ -637,7 +637,8 @@ static void handle_screen_resize(void) {
     xcb_flush(conn);
 
     randr_query(screen->root);
-    redraw_screen();
+    struct ev_timer *timeout = NULL;
+    START_TIMER(timeout, TSTAMP_N_SECS(1), redraw_timeout);
 }
 
 static ssize_t read_raw_image_native(uint32_t *dest, FILE *src, size_t width, size_t height, int pixstride) {
