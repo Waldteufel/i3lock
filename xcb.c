@@ -106,6 +106,28 @@ xcb_visualtype_t *get_root_visual_type(xcb_screen_t *screen) {
     return NULL;
 }
 
+xcb_pixmap_t get_root_pixmap(xcb_connection_t *conn, xcb_screen_t *scr) {
+    xcb_intern_atom_cookie_t atom_c = xcb_intern_atom(conn, 0, strlen("_XROOTPMAP_ID"), "_XROOTPMAP_ID");
+    xcb_intern_atom_reply_t *atom_r = xcb_intern_atom_reply(conn, atom_c, NULL);
+
+    if (!atom_r)
+        return XCB_NONE;
+
+    xcb_atom_t _XROOTPMAP_ID = atom_r->atom;
+    free(atom_r);
+
+    xcb_get_property_cookie_t prop_c = xcb_get_property(conn, false, scr->root, _XROOTPMAP_ID, XCB_ATOM_PIXMAP, 0, 1);
+    xcb_get_property_reply_t *prop_r = xcb_get_property_reply(conn, prop_c, NULL);
+
+    if (!prop_r)
+        return XCB_NONE;
+
+    xcb_pixmap_t root_pixmap = *(xcb_pixmap_t *)xcb_get_property_value(prop_r);
+    free(prop_r);
+
+    return root_pixmap;
+}
+
 xcb_pixmap_t create_bg_pixmap(xcb_connection_t *conn, xcb_screen_t *scr, u_int32_t *resolution, char *color) {
     xcb_pixmap_t bg_pixmap = xcb_generate_id(conn);
     xcb_create_pixmap(conn, scr->root_depth, bg_pixmap, scr->root,

@@ -131,6 +131,30 @@ void draw_image(xcb_pixmap_t bg_pixmap, uint32_t *resolution) {
             cairo_fill(xcb_ctx);
             cairo_pattern_destroy(pattern);
         }
+    } else {
+        cairo_surface_t *rootbg = cairo_xcb_surface_create(conn, get_root_pixmap(conn, screen), vistype, resolution[0], resolution[1]);
+        cairo_set_source_surface(xcb_ctx, rootbg, 0, 0);
+        cairo_paint(xcb_ctx);
+        cairo_surface_destroy(rootbg);
+
+        uint32_t pattern_data[] = {
+            0x00000000, 0x80808080, 0x80808080, 0x00000000,
+            0x80808080, 0x00000000, 0x00000000, 0x80808080,
+            0x80808080, 0x00000000, 0x00000000, 0x80808080,
+            0x00000000, 0x80808080, 0x80808080, 0x00000000,
+        };
+
+        cairo_surface_t *pattern_img = cairo_image_surface_create_for_data((unsigned char*)pattern_data, CAIRO_FORMAT_ARGB32, 4, 4, 16);
+
+        /* create a pattern and fill a rectangle as big as the screen */
+        cairo_pattern_t *pattern;
+        pattern = cairo_pattern_create_for_surface(pattern_img);
+        cairo_set_source(xcb_ctx, pattern);
+        cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+        cairo_rectangle(xcb_ctx, 0, 0, resolution[0], resolution[1]);
+        cairo_fill(xcb_ctx);
+        cairo_pattern_destroy(pattern);
+        cairo_surface_destroy(pattern_img);
     }
 
     if (unlock_indicator &&
